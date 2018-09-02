@@ -23,12 +23,14 @@ app.post('/api/users',(req,res)=>{
 })
 // kiem tra user da co hay chua
 app.post('/api/user/login',(req,res)=>{
-    User.findOne({'email':req.body.email},(err, user)=>{
+    User.findOne({'email':req.body.email},(err,user)=>{
+        if (err) throw err;
         if (!user) res.json({message: "The user not found!"});
-        bcrypt.compare(req.body.password, user.password, (err,isMatch)=>{
+       //su dung method comparePassword trong user.js
+        user.comparePassword(req.body.password, function(err, isMatch){
             if (err) throw err;
-            if (!isMatch) res.json({message: "Incorrect Password!"});
-            res.status(200).send(isMatch);
+            if (!isMatch) return res.json({message:"The Password is not match!"});
+            res.status(200).send(isMatch)
         })
     })
 
