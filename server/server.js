@@ -4,10 +4,11 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const app = express();
 const {User} = require('./models/user');
-
+const {auth} = require('./middleware/auth');
+const config = require('./config/config').get(process.env.NODE_ENV)
 //DB
 mongoose.Promise = global.Promise;
-mongoose.connect('mongodb://localhost:27017/auth');
+mongoose.connect(config.DATABASE);
 app.use(bodyParser.json());
 
 //POST
@@ -41,24 +42,23 @@ app.post('/api/user/login',(req,res)=>{
     })
 
 })
-//Middelware
-let auth =(req,res,next)=>{
-    //lay Token tu header
-    const token = req.header('x-token');
-    User.findByToken(token,(err,user)=>{
-        if (err) throw err;
-        if (!user) return res.status(404).send();
-        //link user tu auth toi cac rout api
-        req.user = user;
-        next();
-    })
-}
+
 //GET
 app.get('/api/profile',auth, (req,res)=>{
     res.status(200).send(req.user);
 })
+//DELETE
+app.delete('/api/logout',auth,(req,res)=>{
+    //check user are logging in now bang middleware auth!
+    req.user.deleteToken(req.token, (err, user)=>{
+        if (err) res.status(404).send(err);
+        res.status(200).send()
+
+    }); //thong tin user da duoc set trng file auth.js
+
+})
 //Port
-const port = process.env.port || 3000;
-app.listen(port, ()=>{
-    console.log(`Started on Port ${port}`);
+//const port = process.env.port || 3000;
+app.listen(config.PORT, ()=>{
+    console.log(`Started on Port ${config.PORT}`);
 })
