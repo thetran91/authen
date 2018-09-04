@@ -18,7 +18,10 @@ app.post('/api/users',(req,res)=>{
     });
     user.save((err,doc)=>{
         if(err) return res.status(404).send(doc)
-        res.status(200).send(doc)
+        user.generateToken((err, user)=>{
+            if (err) send.status(404).res(err)
+            res.header('x-token', user.token).send(user);
+        })
     })
 })
 // kiem tra user da co hay chua
@@ -38,8 +41,22 @@ app.post('/api/user/login',(req,res)=>{
     })
 
 })
-
-
+//Middelware
+let auth =(req,res,next)=>{
+    //lay Token tu header
+    const token = req.header('x-token');
+    User.findByToken(token,(err,user)=>{
+        if (err) throw err;
+        if (!user) return res.status(404).send();
+        //link user tu auth toi cac rout api
+        req.user = user;
+        next();
+    })
+}
+//GET
+app.get('/api/profile',auth, (req,res)=>{
+    res.status(200).send(req.user);
+})
 //Port
 const port = process.env.port || 3000;
 app.listen(port, ()=>{
