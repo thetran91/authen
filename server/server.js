@@ -30,7 +30,10 @@ app.post('/api/user/login',(req,res)=>{
         user.comparePassword(req.body.password, function(err, isMatch){
             if (err) throw err;
             if (!isMatch) return res.json({message:"The Password is not match!"});
-            res.status(200).send(isMatch)
+            //Tao token cho user va luu vao header 
+            user.generateToken((err, user)=>{
+                res.header('x-token', user.token).send(user);
+            })
         })
     })
 
